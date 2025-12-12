@@ -2,34 +2,9 @@
 
 set -e
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
-# Release name
+source ../.env
 RELEASE_NAME="helm-dashboard"
-NAMESPACE="${1:-helm-dashboard}"
-
-# Functions
-print_success() {
-    echo -e "${GREEN}✓ $1${NC}"
-}
-
-print_error() {
-    echo -e "${RED}✗ $1${NC}"
-    exit 1
-}
-
-print_info() {
-    echo -e "${YELLOW}→ $1${NC}"
-}
-
-print_header() {
-    echo -e "${BLUE}$1${NC}"
-}
+NAMESPACE="helm-dashboard"
 
 # Check Helm is installed
 check_helm() {
@@ -111,7 +86,7 @@ install_helm_dashboard() {
         --set service.type=LoadBalancer \
         --set service.port=8080 \
         --set dashboard.allowWriteActions=true \
-        --wait; then
+        ; then
         print_success "Helm Dashboard installed successfully"
     else
         print_error "Failed to install Helm Dashboard"
@@ -131,22 +106,22 @@ wait_for_deployment() {
 # Show release information
 show_release_info() {
     echo ""
-    print_header "Release Information:"
+    print_info "Release Information:"
     helm status "$RELEASE_NAME" -n "$NAMESPACE"
     
     echo ""
-    print_header "Pods:"
+    print_info "Pods:"
     kubectl get pods -n "$NAMESPACE"
     
     echo ""
-    print_header "Services:"
+    print_info "Services:"
     kubectl get svc -n "$NAMESPACE"
 }
 
 # Get access information
 get_access_info() {
     echo ""
-    print_header "Helm Dashboard Access Information:"
+    print_info "Helm Dashboard Access Information:"
     
     local service_type=$(kubectl get svc "$RELEASE_NAME" -n "$NAMESPACE" -o jsonpath='{.spec.type}')
     echo "Service Type: $service_type"
@@ -171,28 +146,29 @@ get_access_info() {
 # Main
 main() {
     echo "================================"
-    print_header "Helm Dashboard Installer"
+    print_info "Helm Dashboard Installer"
     echo "================================"
     echo ""
     
     check_helm
     check_kubectl
-    echo ""
+    
     
     add_helm_dashboard_repo
-    echo ""
+    
     
     update_repos
-    echo ""
+    print_info "Using namespace: $NAMESPACE"
+    
     
     create_namespace
-    echo ""
+    
     
     cleanup_conflicting_resources
-    echo ""
+    
     
     install_helm_dashboard
-    echo ""
+    
     
     wait_for_deployment
     
